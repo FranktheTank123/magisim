@@ -7,5 +7,5 @@ Example usage:
 
 python magisim.py -n 20  
 
-Please enter a card name:Lightning Bolt
-
+Please enter a card name (type 'exit' to break): Lightning Bolt
+Please enter a card search engine: "d" for Doc2Vec, "t" for TFIDF: d

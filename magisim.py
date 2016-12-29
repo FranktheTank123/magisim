@@ -70,14 +70,14 @@ def process_txt(text):
                  if x not in stopwords.words('english')]
 
 def get_train_data_stream(df):
-    for row_, card_ in df.iterrows():
+    for ( row_ , (card_name, card_)) in enumerate(df.iterrows()):
         if (row_ % 1000 == 0):
             print("Now row", row_, "out of", df.shape[0])
         txt_ = process_txt(card_["text"])
-        yield LabeledSentence(txt_, [card_["name"].lower()])
+        yield LabeledSentence(txt_, [card_name.lower()])
 
 def get_train_data():
-	return list(get_train_data())
+	return list(get_train_data_stream(get_cleaned_data()))
 
 def get_doc2vec():
 	target_model_path = os.path.join(model_foler, d2v_name)
@@ -88,7 +88,8 @@ def get_doc2vec():
 	except:
 		logging.info("Doc2Vec model not found. Will train one.")
 		model = Doc2Vec(alpha=0.025, min_alpha=0.025, workers=3)
-		model.build_vocab(get_train_data())
+		train_data = get_train_data()
+		model.build_vocab(train_data)
 		for epoch in range(10):
 			model.train(train_data)
 			model.alpha -= 0.002  # decrease the learning rate
@@ -100,6 +101,7 @@ def get_doc2vec():
 
 def get_similar_card_doc2vec(card, topn=10, model=None):
 	if(model == None):
+		print("get model")
 		model = get_doc2vec()
 	# return [x for x in model.docvecs.most_similar(card.lower(), topn=topn)]
 	return model.docvecs.most_similar(card.lower(), topn=topn)
@@ -158,7 +160,7 @@ def cosine_sim(keys, dct1, dct2):
 # main loop
 def repl(cards, num_res):
 	while True:
-		card = input("Please enter a card name (type 'exit' to break):")
+		card = input("Please enter a card name (type 'exit' to break): ")
 		engine = input('Please enter a card search engine: "d" for Doc2Vec, "t" for TFIDF: ')
 		if not card:
 			continue
@@ -196,8 +198,5 @@ if __name__ == '__main__':
 	repl(cards, num_res)
 	
 #TODO long/complicated keywords are weighted too highly
-#TODO refactor all these terrible variable names
 #TODO 2 card mode where we get deets on the matching. maybe
-
-# do we want ngrams?
-
+#TODO add other similarity metrics
